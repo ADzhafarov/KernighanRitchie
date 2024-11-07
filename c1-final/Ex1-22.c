@@ -1,42 +1,62 @@
 #include <stdio.h>
 
-#define TABSTOP		4
-#define IN			1
-#define OUT			0
+#define BUFLEN	10
+#define IN		1
+#define OUT		0
+
+void printbuf(char buf[], int len);
+void shiftbuf(char buf[], int shift);
 
 int main(void) {
-	int c, i, l, state, t;
+	int c, len, state, last_edge;
+	char buf[BUFLEN];
 
-	l = t = 0;
 	state = OUT;
+	last_edge = 0;
 	while ((c = getchar()) != EOF) {
-		if (c == ' ') {
-			++l;
+		if (c == '\n') {
+			printbuf(buf, len);
+			printf("\n");
+			len = 0;
 			state = OUT;
+			last_edge = 0;
 		} else {
-			if (state == OUT) {
-				if (l == 1 || t % TABSTOP + l < TABSTOP) {
-					for (i = 0; i < l; ++i)
-						printf("%c", ' ');
-					t += l;
-				} else {
-					l += t % TABSTOP;
-					t -= t % TABSTOP;
-					for (i = 0; i < l / TABSTOP; ++i)
-						printf("%c", '\t');
-					t += TABSTOP * (l / TABSTOP);
-					for (i = 0; i < l % TABSTOP; ++i) 
-						printf("%c", ' ');
-				}
+			if (c == ' ' || c == '\t') {
+				if (state == IN)
+					last_edge = len;
+				state = OUT;
+			} else {
 				state = IN;
-				l = 0;
 			}
 
-			if (c == '\n')
-				t = 0;
+			buf[len] = c;
+			++len;
 
-			printf("%c", c);
-			++t;
+			if (len == BUFLEN) {
+				if (last_edge > 0) {
+					printbuf(buf, last_edge);
+					printf("\n");
+					shiftbuf(buf, last_edge);
+					len = BUFLEN - last_edge;
+					last_edge = 0;
+				} else {
+					printbuf(buf, BUFLEN);
+					printf("~\n");
+					len = 0;
+				}
+			}
+
 		}
 	}
 }
+
+void printbuf(char buf[], int len) {
+	for (int i = 0; i < len; i++)
+		printf("%c", buf[i]);
+}
+
+void shiftbuf(char buf[], int shift) {
+	for (int i = 0; i < BUFLEN - shift; ++i)
+		buf[i] = buf[i + shift];
+}
+

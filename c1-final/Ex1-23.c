@@ -1,62 +1,58 @@
 #include <stdio.h>
 
-#define BUFLEN	10
-#define IN		1
-#define OUT		0
-
-void printbuf(char buf[], int len);
-void shiftbuf(char buf[], int shift);
+/* code state */
+#define DEFAULT			0
+#define IN_STRING		1 
+#define	IN_COMMENT		2
+#define INLINE_COMMENT	3
 
 int main(void) {
-	int c, len, state, last_edge;
-	char buf[BUFLEN];
+	int c, next, state, backslashes;
 
-	state = OUT;
-	last_edge = 0;
+	state = DEFAULT;
+
+	backslashes = 0;
 	while ((c = getchar()) != EOF) {
-		if (c == '\n') {
-			printbuf(buf, len);
-			printf("\n");
-			len = 0;
-			state = OUT;
-			last_edge = 0;
-		} else {
-			if (c == ' ' || c == '\t') {
-				if (state == IN)
-					last_edge = len;
-				state = OUT;
-			} else {
-				state = IN;
+		if (state == DEFAULT) {
+			if (c == '"') {
+				state = IN_STRING;
+				printf("%c", c);
 			}
-
-			buf[len] = c;
-			++len;
-
-			if (len == BUFLEN) {
-				if (last_edge > 0) {
-					printbuf(buf, last_edge);
-					printf("\n");
-					shiftbuf(buf, last_edge);
-					len = BUFLEN - last_edge;
-					last_edge = 0;
+			else if (c == '/') {
+				if ((next = getchar()) != '*') {
+					if (next == '/') {
+						state = INLINE_COMMENT;
+					} else {
+						printf("%c", c);
+						if (next != EOF)
+							printf("%c", next);
+					}
 				} else {
-					printbuf(buf, BUFLEN);
-					printf("~\n");
-					len = 0;
+					state = IN_COMMENT;
 				}
+			} else {
+				printf("%c", c);
 			}
-
+		} else if (state == IN_STRING) {
+			if (c == '\\')
+				++backslashes;
+			else
+				backslashes = 0;
+			if (c == '"' && backslashes % 2 == 0)
+				state = DEFAULT;
+			printf("%c", c);
+		} else if (state == IN_COMMENT) {
+			if (c == '*' && (next = getchar()) == '/')
+				state = DEFAULT;
+		} else if (state == INLINE_COMMENT) {
+			if (c == '\n') {
+				printf("%c", c);
+				state = DEFAULT;
+			}
 		}
 	}
-}
 
-void printbuf(char buf[], int len) {
-	for (int i = 0; i < len; i++)
-		printf("%c", buf[i]);
-}
+	printf("Programm /*decommenter*/ finished it's work!"); // A comment to get rid of :P
 
-void shiftbuf(char buf[], int shift) {
-	for (int i = 0; i < BUFLEN - shift; ++i)
-		buf[i] = buf[i + shift];
 }
 
