@@ -1,6 +1,0 @@
-- Create a file with text sample containing words and breaks (tabs, newlines and blanks) with known metrics (or calculated via external software)
-- Feed this file to the program and compare results
-
-Edge-cases:
-	Check that trailing and leading breaks don't add up to word count
-	Check that multiple consequent breaks don't add up to word count multiple times
