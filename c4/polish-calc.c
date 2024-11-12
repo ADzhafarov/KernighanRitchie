@@ -12,7 +12,9 @@ enum operations {
 	MUL = '*',
 	DIV = '/',
 	MOD = '%',
-	NUMBER = 1,
+	NUMBER = 11,
+	SET_VAR,
+	VARIABLE,
 	PRINT,
 	DUPLICATE,
 	SWAP,
@@ -27,6 +29,9 @@ int getop(char []);
 void push(double);
 double pop(void);
 
+double variables[26];
+double last;
+
 int main(void) {
 	int type;
 	double op, op2;
@@ -36,6 +41,15 @@ int main(void) {
 		switch (type) {
 		case NUMBER:
 			push(atof(s));
+			break;
+		case SET_VAR:
+			variables[s[0] - '0'] = atof(s+2);
+			break;
+		case VARIABLE:
+			if (s[0] == '$')
+				push(last);
+			else
+				push(variables[s[0] - '0']);
 			break;
 		case ADD:
 			push(pop() + pop());
@@ -91,7 +105,9 @@ int main(void) {
 			push(pow(pop(), op2));
 			break;
 		case '\n':
-			printf("\t%.8g\n", pop());
+			op = pop();
+			printf("\t%.8g\n", op);
+			last = op;
 			break;
 		default:
 			printf("error: unknown command %s\n", s);
@@ -133,8 +149,22 @@ int getop(char s[]) {
 
 	getword(s, MAXOP);
 
+	if (s[1] == '\0' && ('a' <= s[0] && s[0] <= 'z') || s[0] == '$')
+		return VARIABLE;
+
 	if (s[1] == '\0' && !isdigit(s[0]))
 		return s[0];
+
+	if ('a' <= s[0] && s[0] <= 'z' && s[1] == '=') {
+		i = 2;
+		while (isdigit(s[++i]))
+			;
+		if (s[i] == '.')
+			while (isdigit(s[++i]))
+				;
+		s[i] = '\0';
+		return SET_VAR;
+	}
 
 	if (isdigit(s[0]) || s[0] == '.' || s[0] == '-') {
 		i = 0;
