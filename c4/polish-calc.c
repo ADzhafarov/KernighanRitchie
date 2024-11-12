@@ -11,7 +11,7 @@ double pop(void);
 
 int main(void) {
 	int type;
-	double op2;
+	double op, op2;
 	char s[MAXOP];
 
 	while ((type = getop(s)) != EOF) {
@@ -42,6 +42,22 @@ int main(void) {
 				push((int)pop() % (int)op2);
 			else
 				printf("error: zero division\n");
+			break;
+		case 'p': /* print */
+			op = pop();
+			printf("\t%.8g\n", op);
+			push(op);
+			break;
+		case 'd': /* duplicate */
+	 		op = pop();
+			push(op);
+			push(op);
+			break;
+		case 's': /* swap */
+			op = pop();
+			op2 = pop();
+			push(op);
+			push(op2);
 			break;
 		case '\n':
 			printf("\t%.8g\n", pop());
