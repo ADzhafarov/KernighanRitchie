@@ -229,7 +229,7 @@ void getword(char s[], int maxlen) {
 
 
 int isbuf = 0;
-int buf;
+int buf; // integer buf is good enough for EOF (Ex4-9)
 
 int getch(void) {
 	if (isbuf) {
