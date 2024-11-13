@@ -228,18 +228,22 @@ void getword(char s[], int maxlen) {
 }
 
 
-#define BUFSIZE		100
-
-char buf[BUFSIZE];
-int bufp = 0;
+int isbuf = 0;
+int buf;
 
 int getch(void) {
-	return (bufp > 0) ? buf[--bufp] : getchar();
+	if (isbuf) {
+		isbuf = 0;
+		return buf;
+	} else
+		return getchar();
 }
 
 void ungetch(int c) {
-	if (bufp >= BUFSIZE)
+	if (isbuf)
 		printf("ungetch: too many characters\n");
-	else
-		buf[bufp++] = c;
+	else {
+		isbuf = 1;
+		buf = c;
+	}
 }
