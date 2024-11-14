@@ -139,9 +139,6 @@ double pop(void) {
 	}
 }
 
-int getch(void);
-void ungetch(int);
-
 void getword(char s[], int maxlen);
 
 int getop(char s[]) {
@@ -206,11 +203,15 @@ int getop(char s[]) {
 }
 
 void getword(char s[], int maxlen) {
+
+	static int buf = 0;
+
 	int i, c;
 
 	i = 0;
-	while ((c = getch()) == ' ' || c == '\t')
-		;
+	while ((c = (buf ? buf : getchar())) == ' ' || c == '\t')
+		buf = 0;
+	buf = 0;
 	s[i++] = c;
 
 	if (s[0] == '\n') {
@@ -218,32 +219,19 @@ void getword(char s[], int maxlen) {
 		return;
 	}
 
-	while ((c = getch()) != ' ' && c != '\t' && c != '\n' && c != EOF && i < maxlen - 1)
+	while ((c = (buf ? buf : getchar())) != ' ' && c != '\t' && c != '\n' && c != EOF && i < maxlen - 1) {
 		s[i++] = c;
+		buf = 0;
+	}
 
-	if (c == '\n' || c == EOF)
-		ungetch(c);
+
+	if (c == '\n' || c == EOF) {
+		if (buf)
+			printf("ungetch: too many characters\n");
+		else {
+			buf = c;
+		}
+	}
 
 	s[i] = '\0';
-}
-
-
-int isbuf = 0;
-int buf; // integer buf is good enough for EOF (Ex4-9)
-
-int getch(void) {
-	if (isbuf) {
-		isbuf = 0;
-		return buf;
-	} else
-		return getchar();
-}
-
-void ungetch(int c) {
-	if (isbuf)
-		printf("ungetch: too many characters\n");
-	else {
-		isbuf = 1;
-		buf = c;
-	}
 }
