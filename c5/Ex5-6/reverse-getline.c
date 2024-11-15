@@ -34,7 +34,7 @@ void reverse(char *s) {
 	char tmp;
 	char *p = s;
 	
-	while (*s != EOF && *s != '\n')
+	while (*s != '\0' && *s != '\n')
 		s++;
 
 	s--;
@@ -43,5 +43,4 @@ void reverse(char *s) {
 		tmp = *s, *s = *p, *p = tmp;
 		s--, p++;
 	}
-
 }
