@@ -10,8 +10,16 @@ int main(int argc, char *argv[]) {
 	int tabstop;
 	int tabstops[MAXSTOPS];
 
-	for (i = 0; i < MAXSTOPS; i++)
-		tabstops[i] = --argc > 0 ? atoi(*++argv) : tabstops[i-1] + 4;
+	int start, inc;
+	if (argc == 3 && **(argv + 1) == '-' && **(argv + 2) == '+') {
+		start = atoi(*(argv + 1) + 1);
+		inc = atoi(*(argv + 2) + 1);
+		for (i = 0; i < MAXSTOPS; i++) {
+			tabstops[i] = start + i * inc;
+		}
+	} else
+		for (i = 0; i < MAXSTOPS; i++)
+			tabstops[i] = --argc > 0 ? atoi(*++argv) : tabstops[i-1] + 4;
 
 	t = 0;
 	while ((c = getchar()) != EOF) {
