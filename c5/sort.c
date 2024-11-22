@@ -7,27 +7,45 @@ char *lineptr[MAXLINES];
 int readlines(char *lineptr[], int nlines);
 void writelines(char *lineptr[], int nlines);
 
-void myqsort(void *lineptr[], int left, int right, int (*comp)(const void *, const void *));
+void myqsort(void *lineptr[], int left, int right, int (*comp)(const void *, const void *), int order);
 int numcmp(const char *, const char *);
 
 int main(int argc, char *argv[]) {
 	int nlines;
+	int c;
 	int numeric = 0;
-
-	if (argc > 1 && strcmp(argv[1], "-n") == 0)
-		numeric = 1;
-	if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
-		myqsort((void **) lineptr, 0, nlines - 1,
-			(int (*)(const void *, const void *))(numeric ? numcmp : strcmp));
-		writelines(lineptr, nlines);
-		return 0;
-	} else {
-		printf("input too big to sort\n");
-		return 1;
+	int order = 1;
+	
+	while (--argc > 0 && (*++argv)[0] == '-')
+		while (c = *++argv[0])
+			switch (c) {
+				case 'n':
+					numeric = 1;
+					break;
+				case 'r':
+					order = -1;
+					break;
+				default:
+					printf("find: illegal option %c\n", c);
+					argc = 0;
+					break;
+			}
+	if (argc != 1)
+		printf("Usage: sort [OPTIONS]");
+	else {
+		if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
+			myqsort((void **) lineptr, 0, nlines - 1,
+		   (int (*)(const void *, const void *))(numeric ? numcmp : strcmp), order);
+			writelines(lineptr, nlines);
+			return 0;
+		} else {
+			printf("input too big to sort\n");
+			return 1;
+		}
 	}
 }
 
-void myqsort(void *v[], int left, int right, int (*comp)(const void *, const void *)) {
+void myqsort(void *v[], int left, int right, int (*comp)(const void *, const void *), int order) {
 	int i, last;
 
 	void swap(void *v[], int i, int j);
@@ -39,12 +57,12 @@ void myqsort(void *v[], int left, int right, int (*comp)(const void *, const voi
 	last = left;
 	
 	for (i = left + 1; i <= right; i++)
-		if ((*comp)(v[i], v[left]) < 0)
+		if ((*comp)(v[i], v[left]) * order < 0)
 			swap(v, ++last, i);
 
 	swap(v, left, last);
-	myqsort(v, left, last - 1, comp);
-	myqsort(v, last + 1, right, comp);
+	myqsort(v, left, last - 1, comp, order);
+	myqsort(v, last + 1, right, comp, order);
 }
 
 int numcmp(const char *s1, const char *s2) {
