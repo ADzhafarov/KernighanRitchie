@@ -9,12 +9,16 @@ void writelines(char *lineptr[], int nlines);
 
 void myqsort(void *lineptr[], int left, int right, int (*comp)(const void *, const void *), int order);
 int numcmp(const char *, const char *);
+int foldcmp(const char *, const char *);
 
 int main(int argc, char *argv[]) {
 	int nlines;
 	int c;
 	int numeric = 0;
 	int order = 1;
+	int fold = 0;
+
+	int (*comp)(const void *, const void *);
 	
 	while (--argc > 0 && (*++argv)[0] == '-')
 		while (c = *++argv[0])
@@ -25,17 +29,26 @@ int main(int argc, char *argv[]) {
 				case 'r':
 					order = -1;
 					break;
+				case 'f':
+					fold = 1;
+					break;
 				default:
-					printf("find: illegal option %c\n", c);
+					printf("sort: illegal option %c\n", c);
 					argc = 0;
 					break;
 			}
-	if (argc != 1)
+	if (argc != 0)
 		printf("Usage: sort [OPTIONS]");
 	else {
 		if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
-			myqsort((void **) lineptr, 0, nlines - 1,
-		   (int (*)(const void *, const void *))(numeric ? numcmp : strcmp), order);
+			if (numeric) {
+				comp = (int (*)(const void *, const void *)) numcmp;
+			} else if (fold) {
+				comp = (int (*)(const void *, const void *)) foldcmp;
+			} else {
+				comp = (int (*)(const void *, const void *)) strcmp;
+			}
+			myqsort((void **) lineptr, 0, nlines - 1, comp, order);
 			writelines(lineptr, nlines);
 			return 0;
 		} else {
@@ -77,6 +90,21 @@ int numcmp(const char *s1, const char *s2) {
 		return 1;
 	else
 		return 0;
+}
+
+char lower(char c) {
+	if ('A' <= c && c <= 'Z')
+		return c - 'A' + 'a';
+	else
+		return c;
+}
+
+int foldcmp(const char *s1, const char *s2) {
+	for ( ; lower(*s1) == lower(*s2); s1++, s2++)
+		if (*s1 == '\0')
+			return 0;
+	
+	return lower(*s1) - lower(*s2);
 }
 
 void swap(void *v[], int i, int j) {
