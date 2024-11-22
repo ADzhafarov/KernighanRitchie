@@ -7,10 +7,10 @@ char *lineptr[MAXLINES];
 int readlines(char *lineptr[], int nlines);
 void writelines(char *lineptr[], int nlines);
 
-void myqsort(void *v[], int left, int right, void (*preproc)(void *, void*, int fold), int (*comp)(const void *, const void *), int order, int fold);
+void myqsort(void *v[], int left, int right, void (*preproc)(void *, void*, int fold, int dir), int (*comp)(const void *, const void *), int order, int fold, int dir);
 int numcmp(const char *, const char *);
 int foldcmp(const char *, const char *);
-void preproc(char *, char *, int fold);
+void preproc(char *, char *, int fold, int dir);
 
 int main(int argc, char *argv[]) {
 	int nlines;
@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 	int numeric = 0;
 	int order = 1;
 	int fold = 0;
+	int dir = 0;
 
 	int (*comp)(const void *, const void *);
 	
@@ -33,6 +34,9 @@ int main(int argc, char *argv[]) {
 				case 'f':
 					fold = 1;
 					break;
+				case 'd':
+					dir = 1;
+					break;
 				default:
 					printf("sort: illegal option %c\n", c);
 					argc = 0;
@@ -47,7 +51,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				comp = (int (*)(const void *, const void *)) strcmp;
 			}
-			myqsort((void **) lineptr, 0, nlines - 1, (void (*)(void *, void*, int fold)) preproc, comp, order, fold);
+			myqsort((void **) lineptr, 0, nlines - 1, (void (*)(void *, void*, int fold, int dir)) preproc, comp, order, fold, dir);
 			writelines(lineptr, nlines);
 			return 0;
 		} else {
@@ -59,7 +63,7 @@ int main(int argc, char *argv[]) {
 
 #define MAXLEN		10001
 
-void myqsort(void *v[], int left, int right, void (*preproc)(void *, void*, int fold), int (*comp)(const void *, const void *), int order, int fold) {
+void myqsort(void *v[], int left, int right, void (*preproc)(void *, void*, int fold, int dir), int (*comp)(const void *, const void *), int order, int fold, int dir) {
 	int i, last;
 
 	char op1[MAXLEN], op2[MAXLEN];
@@ -73,26 +77,39 @@ void myqsort(void *v[], int left, int right, void (*preproc)(void *, void*, int 
 	last = left;
 	
 	for (i = left + 1; i <= right; i++) {
-		preproc(v[i], op1, fold), preproc(v[left], op2, fold);
+		preproc(v[i], op1, fold, dir), preproc(v[left], op2, fold, dir);
 		if ((*comp)(op1, op2) * order < 0)
 			swap(v, ++last, i);
 	}
 
 	swap(v, left, last);
-	myqsort(v, left, last - 1, preproc, comp, order, fold);
-	myqsort(v, last + 1, right, preproc, comp, order, fold);
+	myqsort(v, left, last - 1, preproc, comp, order, fold, dir);
+	myqsort(v, last + 1, right, preproc, comp, order, fold, dir);
 }
 
 char lower(char c);
 
-void preproc(char *from, char *to, int fold) {
+void preproc(char *from, char *to, int fold, int dir) {
 	char *p = to;
+	char *p2 = to;
+	char c;
 	while (*to++ = *from++)
 		;
 
+	to = p;
 	if (fold)
 		while (*p++ = lower(*p))
 			;
+	
+	p = to;
+	if (dir) {
+		while (c = *p++) {
+			if ( ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
+				('0' <= c && c <= '9') || c == ' ' || c == '\t' )
+				*p2++ = c;
+		}
+		*p2 = '\0';
+	}
 }
 
 int numcmp(const char *s1, const char *s2) {
