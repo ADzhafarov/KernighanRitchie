@@ -7,9 +7,10 @@ char *lineptr[MAXLINES];
 int readlines(char *lineptr[], int nlines);
 void writelines(char *lineptr[], int nlines);
 
-void myqsort(void *lineptr[], int left, int right, int (*comp)(const void *, const void *), int order);
+void myqsort(void *v[], int left, int right, void (*preproc)(void *, void*, int fold), int (*comp)(const void *, const void *), int order, int fold);
 int numcmp(const char *, const char *);
 int foldcmp(const char *, const char *);
+void preproc(char *, char *, int fold);
 
 int main(int argc, char *argv[]) {
 	int nlines;
@@ -43,12 +44,10 @@ int main(int argc, char *argv[]) {
 		if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
 			if (numeric) {
 				comp = (int (*)(const void *, const void *)) numcmp;
-			} else if (fold) {
-				comp = (int (*)(const void *, const void *)) foldcmp;
 			} else {
 				comp = (int (*)(const void *, const void *)) strcmp;
 			}
-			myqsort((void **) lineptr, 0, nlines - 1, comp, order);
+			myqsort((void **) lineptr, 0, nlines - 1, (void (*)(void *, void*, int fold)) preproc, comp, order, fold);
 			writelines(lineptr, nlines);
 			return 0;
 		} else {
@@ -58,8 +57,12 @@ int main(int argc, char *argv[]) {
 	}
 }
 
-void myqsort(void *v[], int left, int right, int (*comp)(const void *, const void *), int order) {
+#define MAXLEN		10001
+
+void myqsort(void *v[], int left, int right, void (*preproc)(void *, void*, int fold), int (*comp)(const void *, const void *), int order, int fold) {
 	int i, last;
+
+	char op1[MAXLEN], op2[MAXLEN];
 
 	void swap(void *v[], int i, int j);
 
@@ -69,13 +72,27 @@ void myqsort(void *v[], int left, int right, int (*comp)(const void *, const voi
 	swap(v, left, (left + right) / 2);
 	last = left;
 	
-	for (i = left + 1; i <= right; i++)
-		if ((*comp)(v[i], v[left]) * order < 0)
+	for (i = left + 1; i <= right; i++) {
+		preproc(v[i], op1, fold), preproc(v[left], op2, fold);
+		if ((*comp)(op1, op2) * order < 0)
 			swap(v, ++last, i);
+	}
 
 	swap(v, left, last);
-	myqsort(v, left, last - 1, comp, order);
-	myqsort(v, last + 1, right, comp, order);
+	myqsort(v, left, last - 1, preproc, comp, order, fold);
+	myqsort(v, last + 1, right, preproc, comp, order, fold);
+}
+
+char lower(char c);
+
+void preproc(char *from, char *to, int fold) {
+	char *p = to;
+	while (*to++ = *from++)
+		;
+
+	if (fold)
+		while (*p++ = lower(*p))
+			;
 }
 
 int numcmp(const char *s1, const char *s2) {
@@ -115,7 +132,6 @@ void swap(void *v[], int i, int j) {
 	v[j] = temp;
 }
 
-#define MAXLEN		10001
 int get_line(char *, int);
 char *alloc(int);
 
