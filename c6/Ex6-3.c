@@ -19,7 +19,6 @@ enum word_types {ALPHANUM = 1, NAW};
 void print_results(struct tnode *p);
 void process_line(char *line, struct tnode **p, int line_num);
 
-
 int main(void) {
     size_t line_lim = MAXLINE;
     char *line = (char *)malloc(sizeof(char) * line_lim);
@@ -97,14 +96,32 @@ int getword(char **line, char *word, int lim) {
     return ALPHANUM;
 }
 
+static char *filterwords[] = {"is", "and", "the", "of", "if", "at", "in"};
+#define FILTERNUM   (sizeof(filterwords)) / (sizeof(*filterwords))
+
 void print_results(struct tnode *p) {
+    int i;
+    char found = 0;
+    char *pt;
     if (p == NULL)
         return;
     print_results(p->left);
-    printf("%20s:\t", p->word);
-    for (int i = 0; i < p->lines_num; i++) {
-        printf("%d%s", p->lines[i], i == p->lines_num - 1 ? "\n": ", ");
+
+
+    pt = *filterwords;
+    for (i = 0; i < FILTERNUM; i++) {
+        if (strcmp(p->word, pt + i) == 0)
+            found = 1;
     }
+
+    if (found == 0) {
+        printf("%20s:\t", p->word);
+        for (i = 0; i < p->lines_num; i++) {
+            if (found == 0)
+                printf("%d%s", p->lines[i], i == p->lines_num - 1 ? "\n": ", ");
+        }
+    }
+
     print_results(p->right);
 }
 
